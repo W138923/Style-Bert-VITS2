@@ -1,0 +1,38 @@
+# Use the official Python image from the Docker Hub
+FROM python:3.10
+
+# Set environment variables
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
+
+# Create a non-root user
+RUN useradd -m -u 1000 user
+
+# Set the user to the non-root user
+USER user
+
+# Set the working directory
+WORKDIR $HOME/app
+
+# Install pip and upgrade it
+RUN pip install --no-cache-dir --upgrade pip
+
+# Clone the repository
+RUN git clone https://github.com/W138923/Style-Bert-VITS2.
+
+# Set up the virtual environment
+RUN python -m venv venv
+
+# Activate the virtual environment and install dependencies
+RUN /bin/bash -c "source venv/bin/activate && \
+    pip install 'torch<2.4' 'torchaudio<2.4' --index-url https://download.pytorch.org/whl/cu121 && \
+    pip install -r requirements.txt"
+
+# Run the initialization script
+RUN /bin/bash -c "source venv/bin/activate && python initialize.py"
+
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Command to run the FastAPI server
+CMD ["venv/bin/python", "server_fastapi.py"]
